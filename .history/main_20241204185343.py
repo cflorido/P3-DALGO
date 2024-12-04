@@ -18,8 +18,25 @@ def construir_grafo(celulas, d):
     return grafo
 
 def componentes_conexas(grafo):
+    visitados = set()
+    grupos = []
 
-    return []
+    def bfs(nodo):
+        cola = deque([nodo])
+        componente = []
+        while cola:
+            actual = cola.popleft()
+            if actual not in visitados:
+                visitados.add(actual)
+                componente.append(actual)
+                cola.extend(grafo[actual])
+        return componente
+
+    for nodo in grafo:
+        if nodo not in visitados:
+            grupos.append(bfs(nodo))
+
+    return grupos
 
 def resolver_caso(caso):
     n, d = caso["n"], caso["d"]

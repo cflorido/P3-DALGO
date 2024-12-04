@@ -19,7 +19,7 @@ def construir_grafo(celulas, d):
 
 def componentes_conexas(grafo):
 
-    return []
+    return None
 
 def resolver_caso(caso):
     n, d = caso["n"], caso["d"]
