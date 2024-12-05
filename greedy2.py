@@ -1,8 +1,5 @@
-from math import sqrt
-from collections import defaultdict
 import math
-
-
+from collections import defaultdict
 def grid_neighbors(coords, d):
     """
     Función optimizada para encontrar vecinos dentro de una distancia `d` usando una estructura de cuadrícula.
@@ -36,7 +33,15 @@ def grid_neighbors(coords, d):
     
     return neighbors
 
+import math
+import random
+from collections import defaultdict
+
 def construir_grafo(celulas, d):
+    """
+    Construye un grafo en el que las células son nodos y hay una arista entre dos células
+    si están dentro de una distancia `d` y tienen al menos un péptido en común.
+    """
     grafo = defaultdict(list)
     n = len(celulas)
     
@@ -55,15 +60,43 @@ def construir_grafo(celulas, d):
 
     return grafo
 
-def componentes_conexas(grafo):
-    print(grafo)
+def greedy_clique_cover(grafo):
     """
-    Función para encontrar los componentes conexos 
+    Algoritmo greedy para encontrar una cobertura mínima de cliques en el grafo.
     """
+    # Inicializamos los cliques
+    cliques = []
+    unassigned = set(grafo.keys())  # Conjunto de células no asignadas a ningún clique
 
-    return []
+    while unassigned:
+        # Elegimos un nodo arbitrario de las células no asignadas
+        v = unassigned.pop()
+
+        # Creamos un nuevo clique con el nodo v
+        new_clique = {v}
+        to_remove = {v}
+
+        # Buscamos los vecinos de v que pueden ser parte del mismo clique
+        for u in list(new_clique):
+            for neighbor in grafo[u]:
+                if neighbor not in to_remove:
+                    # Si el vecino puede unirse al clique, lo agregamos
+                    if all(neighbor in grafo[n] for n in new_clique):
+                        new_clique.add(neighbor)
+                        to_remove.add(neighbor)
+
+        # Añadimos el clique encontrado a la lista de cliques
+        cliques.append(new_clique)
+
+        # Actualizamos el conjunto de células no asignadas
+        unassigned -= to_remove
+
+    return cliques
 
 def resolver_caso(caso):
+    """
+    Resuelve el caso dado construyendo el grafo y aplicando el algoritmo greedy.
+    """
     n, d = caso["n"], caso["d"]
     celulas = []
     for entrada in caso["celulas"]:
@@ -72,12 +105,16 @@ def resolver_caso(caso):
         peptidos = set(entrada[3:])
         celulas.append((id_celula, x, y, peptidos))
 
+    # Construimos el grafo
     grafo = construir_grafo(celulas, d)
-    grupos = componentes_conexas(grafo)
 
+    # Aplicamos el algoritmo greedy para encontrar el clique cover
+    cliques = greedy_clique_cover(grafo)
+
+    # Asignamos un número de clique a cada célula
     resultado = {}
-    for i, grupo in enumerate(grupos, start=1):
-        for celula in grupo:
+    for i, clique in enumerate(cliques, start=1):
+        for celula in clique:
             resultado[celula] = i
 
     return resultado
