@@ -1,7 +1,8 @@
 from math import sqrt
 from collections import defaultdict
-import math
 
+def distancia_euclidiana(x1, y1, x2, y2):
+    return sqrt((x1 - x2)**2 + (y1 - y2)**2)
 
 def grid_neighbors(coords, d):
     """
@@ -30,7 +31,7 @@ def grid_neighbors(coords, d):
                 for j in grid.get(neighbor_cell, []):
                     if i != j:
                         # Verifica la distancia real entre puntos para confirmar que está en el rango
-                        dist = math.sqrt((coords[i][0] - coords[j][0]) ** 2 + (coords[i][1] - coords[j][1]) ** 2)
+                        dist = sqrt((coords[i][0] - coords[j][0]) ** 2 + (coords[i][1] - coords[j][1]) ** 2)
                         if dist <= d:
                             neighbors[i].append(j)
     
@@ -52,16 +53,31 @@ def construir_grafo(celulas, d):
             id2, _, _, peptidos2 = celulas[j]
             if peptidos1 & peptidos2:  # Si tienen péptidos en común
                 grafo[id1].append(id2)
-
+                grafo[id2].append(id1)
+    
     return grafo
 
 def componentes_conexas(grafo):
-    print(grafo)
     """
-    Función para encontrar los componentes conexos 
+    Función para encontrar los componentes conexos en un grafo utilizando DFS.
     """
+    visited = set()
+    componentes = []
 
-    return []
+    def dfs(node, component):
+        visited.add(node)
+        component.append(node)
+        for neighbor in grafo[node]:
+            if neighbor not in visited:
+                dfs(neighbor, component)
+
+    for node in grafo:
+        if node not in visited:
+            component = []
+            dfs(node, component)
+            componentes.append(component)
+
+    return componentes
 
 def resolver_caso(caso):
     n, d = caso["n"], caso["d"]

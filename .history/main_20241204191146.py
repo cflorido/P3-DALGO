@@ -2,7 +2,6 @@ from math import sqrt
 from collections import defaultdict
 import math
 
-
 def grid_neighbors(coords, d):
     """
     Función optimizada para encontrar vecinos dentro de una distancia `d` usando una estructura de cuadrícula.
@@ -40,28 +39,45 @@ def construir_grafo(celulas, d):
     grafo = defaultdict(list)
     n = len(celulas)
     
-    # Extraemos las coordenadas de las células para pasarlas a la función grid_neighbors
-    coords = [(x, y) for _, x, y, _ in celulas]
-
-    # Usamos la función grid_neighbors para encontrar los vecinos de las células
-    neighbors = grid_neighbors(coords, d)
-    
+    coords = []
     for i in range(n):
-        id1, _, _, peptidos1 = celulas[i]
-        for j in neighbors[i]:
-            id2, _, _, peptidos2 = celulas[j]
-            if peptidos1 & peptidos2:  # Si tienen péptidos en común
+        id_celula, x, y, peptidos = celulas[i]
+        coords.append((x, y))  # Guardamos solo las coordenadas
+
+    # Usamos la función grid_neighbors para encontrar los vecinos
+    vecinos = grid_neighbors(coords, d)
+
+    for i in range(n):
+        id1, x1, y1, peptidos1 = celulas[i]
+        for j in vecinos.get(i, []):
+            id2, x2, y2, peptidos2 = celulas[j]
+            if peptidos1 & peptidos2:  # Verifica si tienen péptidos comunes
                 grafo[id1].append(id2)
+                grafo[id2].append(id1)
 
     return grafo
 
 def componentes_conexas(grafo):
-    print(grafo)
-    """
-    Función para encontrar los componentes conexos 
-    """
+    visitado = set()
+    componentes = []
 
-    return []
+    def bfs(nodo):
+        cola = deque([nodo])
+        componente = []
+        while cola:
+            actual = cola.popleft()
+            if actual not in visitado:
+                visitado.add(actual)
+                componente.append(actual)
+                cola.extend(grafo[actual])
+        return componente
+
+    for nodo in grafo:
+        if nodo not in visitado:
+            componente = bfs(nodo)
+            componentes.append(componente)
+    
+    return componentes
 
 def resolver_caso(caso):
     n, d = caso["n"], caso["d"]

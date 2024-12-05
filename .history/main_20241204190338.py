@@ -1,65 +1,23 @@
 from math import sqrt
-from collections import defaultdict
-import math
+from collections import defaultdict, deque
 
-
-def grid_neighbors(coords, d):
-    """
-    Función optimizada para encontrar vecinos dentro de una distancia `d` usando una estructura de cuadrícula.
-    """
-    grid = defaultdict(list)
-    cell_size = d  # Tamaño de la celda en función de la distancia d
-
-    # Asigna cada coordenada a una celda en la cuadrícula
-    for i, (x, y) in enumerate(coords):
-        cell_x, cell_y = int(x // cell_size), int(y // cell_size)
-        grid[(cell_x, cell_y)].append(i)
-
-    neighbors = defaultdict(list)
-
-    # Para cada célula, buscar vecinos en celdas adyacentes
-    for i, (x, y) in enumerate(coords):
-        cell_x, cell_y = int(x // cell_size), int(y // cell_size)
-
-        # Recorrer solo las celdas adyacentes y la propia celda
-        for dx in range(-1, 2):
-            for dy in range(-1, 2):
-                neighbor_cell = (cell_x + dx, cell_y + dy)
-
-                # Verifica cada punto en la celda vecina
-                for j in grid.get(neighbor_cell, []):
-                    if i != j:
-                        # Verifica la distancia real entre puntos para confirmar que está en el rango
-                        dist = math.sqrt((coords[i][0] - coords[j][0]) ** 2 + (coords[i][1] - coords[j][1]) ** 2)
-                        if dist <= d:
-                            neighbors[i].append(j)
-    
-    return neighbors
+def distancia_euclidiana(x1, y1, x2, y2):
+    return sqrt((x1 - x2)**2 + (y1 - y2)**2)
 
 def construir_grafo(celulas, d):
     grafo = defaultdict(list)
     n = len(celulas)
     
-    # Extraemos las coordenadas de las células para pasarlas a la función grid_neighbors
-    coords = [(x, y) for _, x, y, _ in celulas]
-
-    # Usamos la función grid_neighbors para encontrar los vecinos de las células
-    neighbors = grid_neighbors(coords, d)
-    
     for i in range(n):
-        id1, _, _, peptidos1 = celulas[i]
-        for j in neighbors[i]:
-            id2, _, _, peptidos2 = celulas[j]
-            if peptidos1 & peptidos2:  # Si tienen péptidos en común
+        id1, x1, y1, peptidos1 = celulas[i]
+        for j in range(i + 1, n):
+            id2, x2, y2, peptidos2 = celulas[j]
+            if distancia_euclidiana(x1, y1, x2, y2) <= d and peptidos1 & peptidos2:
                 grafo[id1].append(id2)
-
+                grafo[id2].append(id1)
     return grafo
 
 def componentes_conexas(grafo):
-    print(grafo)
-    """
-    Función para encontrar los componentes conexos 
-    """
 
     return []
 

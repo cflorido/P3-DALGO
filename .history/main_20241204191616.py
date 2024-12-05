@@ -1,7 +1,8 @@
 from math import sqrt
 from collections import defaultdict
-import math
 
+def distancia_euclidiana(x1, y1, x2, y2):
+    return sqrt((x1 - x2)**2 + (y1 - y2)**2)
 
 def grid_neighbors(coords, d):
     """
@@ -52,7 +53,8 @@ def construir_grafo(celulas, d):
             id2, _, _, peptidos2 = celulas[j]
             if peptidos1 & peptidos2:  # Si tienen péptidos en común
                 grafo[id1].append(id2)
-
+                grafo[id2].append(id1)
+    
     return grafo
 
 def componentes_conexas(grafo):
