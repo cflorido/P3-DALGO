@@ -84,7 +84,6 @@ def resolver_caso(caso):
     # Construir grafo basado en las restricciones
     grafo = construir_grafo(celulas, d)
 
-    # Resolver el problema con un enfoque greedy
     resultado = greedy_componentes_clique(grafo)
 
     return resultado
@@ -95,11 +94,9 @@ def encontrar_clique(grafo, disponibles):
     """
     clique = []
     while disponibles:
-        # Escoge un vértice arbitrario como punto de inicio del clique
+
         v = disponibles.pop()
         clique.append(v)
-
-        # Filtra los vértices que son vecinos de todos los del clique actual
         disponibles = {u for u in disponibles if all(u in grafo[n] for n in clique)}
     
     return clique
@@ -153,24 +150,13 @@ def componentes_conexas(grafo):
 
 
 # Integrar todo en el flujo principal
-def resolver_caso(caso):
-    n, d = caso["n"], caso["d"]
-    celulas = []
-    for entrada in caso["celulas"]:
-        id_celula = entrada[0]
-        x, y = entrada[1], entrada[2]
-        peptidos = set(entrada[3:])
-        celulas.append((id_celula, x, y, peptidos))
-
-    # Construimos el grafo de células
+def resolver_caso(n, d, celulas):
+    celulas = [(int(data[0]), int(data[1]), int(data[2]), set(data[3:])) for data in celulas]
     grafo = construir_grafo(celulas, d)
-    
-    # Dividimos el grafo en componentes conexas, ya que el cubrimiento de cliques es independiente en cada componente
     componentes = componentes_conexas(grafo)
-
-    # Encontramos el clique cover por componente
     resultado = {}
     clique_id = 1
+
     for componente in componentes:
         subgrafo = {nodo: [vec for vec in grafo[nodo] if vec in componente] for nodo in componente}
         cliques = minimum_clique_cover(subgrafo)
@@ -179,47 +165,32 @@ def resolver_caso(caso):
             for nodo in clique:
                 resultado[nodo] = clique_id
             clique_id += 1
-
     return resultado
 
 
-# Prueba con casos
 def main():
-    casos = [
-        {
-            "n": 7,
-            "d": 1,
-            "celulas": [
-                [1, 0, 0, "AETQT", "DFTYA", "PHLYT"],
-                [2, 0, 2, "DSQTS", "IYHLK", "LHGPS", "LTLLS"],
-                [3, 1, 0, "AETQT", "DFTYA", "HGCYS", "LSVGG", "SRFNH"],
-                [4, 1, 1, "DFTYA", "HGCYS", "IYHLK", "SRFNH"],
-                [5, 1, 2, "DSQTS", "IYHLK", "LSVGG", "LTLLS", "TTVTG"],
-                [6, 2, 1, "AETQT", "HGCYS", "IYHLK", "LSVGG", "LTLLS"],
-                [7, 2, 2, "HGCYS", "SRFNH", "TTVTG"],
-            ]
-        },
-        {
-            "n": 7,
-            "d": 2,
-            "celulas": [
-                [1, 0, 0, "AETQT", "DFTYA", "PHLYT"],
-                [2, 0, 2, "DSQTS", "IYHLK", "LHGPS", "LTLLS"],
-                [3, 1, 0, "AETQT", "DFTYA", "HGCYS", "LSVGG", "SRFNH"],
-                [4, 1, 1, "DFTYA", "HGCYS", "IYHLK", "SRFNH"],
-                [5, 1, 2, "DSQTS", "IYHLK", "LSVGG", "LTLLS", "TTVTG"],
-                [6, 2, 1, "AETQT", "HGCYS", "IYHLK", "LSVGG", "LTLLS"],
-                [7, 2, 2, "HGCYS", "SRFNH", "TTVTG"],
-            ]
-        },
-    ]
-
-    for i, caso in enumerate(casos, start=1):
-        resultado = resolver_caso(caso)
-        print(f"Caso {i}:")
+    import sys
+    input = sys.stdin.read
+    data = input().splitlines()
+    
+    t = int(data[0])  # Número de casos
+    index = 1
+    resultados = []
+    
+    for _ in range(t):
+        n, d = map(int, data[index].split())
+        index += 1
+        celulas = [data[index + i].split() for i in range(n)]
+        index += n
+        
+        # Resolver cada caso
+        resultado = resolver_caso(n, d, celulas)
+        resultados.append(resultado)
+    
+    # Imprimir resultados
+    for resultado in resultados:
         for id_celula in sorted(resultado):
             print(id_celula, resultado[id_celula])
-
 
 if __name__ == "__main__":
     main()
