@@ -48,6 +48,7 @@ def construir_grafo(celulas, d):
             id2, _, _, peptidos2 = celulas[j]
             if peptidos1 & peptidos2:  # Si tienen péptidos en común
                 grafo[id1].append(id2)
+                grafo[id2].append(id1)
 
     return grafo
 
