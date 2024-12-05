@@ -35,6 +35,7 @@ def construir_grafo(celulas, d):
 
     for i in range(n):
         id1, _, _, peptidos1 = celulas[i]
+        grafo[id1]=[]
         for j in neighbors[i]:
             id2, _, _, peptidos2 = celulas[j]
             if peptidos1 & peptidos2:
