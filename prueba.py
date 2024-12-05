@@ -168,10 +168,8 @@ def resolver_caso(n, d, celulas):
     return resultado
 
 
-def main():
-    import sys
-    input = sys.stdin.read
-    data = input().splitlines()
+def main(texto):
+    data = texto.splitlines()
     
     t = int(data[0])  # Número de casos
     index = 1
@@ -187,10 +185,30 @@ def main():
         resultado = resolver_caso(n, d, celulas)
         resultados.append(resultado)
     
-    # Imprimir resultados
+    # Retornar resultados como texto para impresión o uso posterior
+    salida = []
     for resultado in resultados:
         for id_celula in sorted(resultado):
-            print(id_celula, resultado[id_celula])
+            salida.append(f"{id_celula} {resultado[id_celula]}")
+    return "\n".join(salida)
 
-if __name__ == "__main__":
-    main()
+# Texto de entrada
+texto = """1
+13 1
+1 0 0 NDNPD NINRV NSCCF
+2 0 1 NYDPD HYAQR NSCDF VNRNG
+3 1 0 NDSPD LEDKR DFNKF
+4 5 5 NDNSD ALIIW YRYKG FLPYV
+5 5 3 NDNPS TICGR TVEAK
+6 3 2 KQRLY QDYVD QRFFV
+7 0 8 KDYLY PKRVH MHENV DFYTY
+8 4 2 SKSFI TIFVY WDVWR CSRGV
+9 3 8 KRAEV
+10 7 9 AKYLR
+11 10 2 QRDLR NNDVQ VWNVQ LWFMW YQMAM
+12 0 10 VKHPM
+13 4 9 GYQES NGYVW DNKRF"""
+
+# Ejecutar la función con el texto proporcionado
+resultado = main(texto)
+print(resultado)
