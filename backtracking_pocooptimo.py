@@ -1,7 +1,8 @@
-from math import sqrt
+import numpy as np
+import random
 from collections import defaultdict
+from math import sqrt
 import math
-
 
 def grid_neighbors(coords, d):
     """
@@ -39,13 +40,13 @@ def grid_neighbors(coords, d):
 def construir_grafo(celulas, d):
     grafo = defaultdict(list)
     n = len(celulas)
-    
+
     # Extraemos las coordenadas de las células para pasarlas a la función grid_neighbors
     coords = [(x, y) for _, x, y, _ in celulas]
 
     # Usamos la función grid_neighbors para encontrar los vecinos de las células
     neighbors = grid_neighbors(coords, d)
-    
+
     for i in range(n):
         id1, _, _, peptidos1 = celulas[i]
         for j in neighbors[i]:
@@ -55,13 +56,53 @@ def construir_grafo(celulas, d):
 
     return grafo
 
-def componentes_clique(grafo):
-    print(grafo)
-    """
-    Función para encontrar los cliques
-    """
+def light_backtrack(adj_mat, cliques, v=0, best=(math.inf, None)):
+    n = adj_mat.shape[0]
 
-    return []
+    if v == n:
+        if is_solution(cliques, adj_mat):
+            num_cliques = len(set(cliques))
+            if num_cliques < best[0]:
+                best = (num_cliques, cliques[:])
+    else:
+        for i in range(1, v + 2):
+            cliques[v] = i
+            if is_partial_solution(cliques, adj_mat, v):
+                best = light_backtrack(adj_mat, cliques, v + 1, best)
+
+    return best
+
+def is_partial_solution(cliques, adj_mat, v):
+    for i in range(v):
+        if cliques[i] == cliques[v] and adj_mat[i, v] == 0:
+            return False
+    return True
+
+def is_solution(cliques, adj_mat):
+    n = len(cliques)
+    for i in range(n):
+        for j in range(i + 1, n):
+            if cliques[i] == cliques[j] and adj_mat[i, j] == 0:
+                return False
+    return True
+
+def componentes_clique(grafo):
+    ids = list(grafo.keys())
+    n = len(ids)
+
+    adj_mat = np.zeros((n, n), dtype=int)
+    id_to_index = {id_: idx for idx, id_ in enumerate(ids)}
+
+    for id1, vecinos in grafo.items():
+        for id2 in vecinos:
+            adj_mat[id_to_index[id1], id_to_index[id2]] = 1
+            adj_mat[id_to_index[id2], id_to_index[id1]] = 1
+
+    cliques = [0] * n
+    _, assignment = light_backtrack(adj_mat, cliques)
+
+    clique_assignment = {ids[i]: assignment[i] for i in range(n)}
+    return clique_assignment
 
 def resolver_caso(caso):
     n, d = caso["n"], caso["d"]
@@ -73,17 +114,11 @@ def resolver_caso(caso):
         celulas.append((id_celula, x, y, peptidos))
 
     grafo = construir_grafo(celulas, d)
-    grupos = componentes_conexas(grafo)
-
-    resultado = {}
-    for i, grupo in enumerate(grupos, start=1):
-        for celula in grupo:
-            resultado[celula] = i
+    resultado = componentes_clique(grafo)
 
     return resultado
 
 def main():
-    # Casos de prueba proporcionados
     casos = [
         {
             "n": 7,
@@ -109,6 +144,17 @@ def main():
                 [5, 1, 2, "DSQTS", "IYHLK", "LSVGG", "LTLLS", "TTVTG"],
                 [6, 2, 1, "AETQT", "HGCYS", "IYHLK", "LSVGG", "LTLLS"],
                 [7, 2, 2, "HGCYS", "SRFNH", "TTVTG"],
+            ]
+        },
+        {
+            "n": 4,
+            "d": 1,
+            "celulas": [
+                [1, 0, 0, "AETQT", "DFTYA"],
+                [2, 0, 1, "AETQT", "HGCYS"],
+                [3, 1, 0, "DFTYA", "IYHLK"],
+                [4, 1, 1, "HGCYS", "IYHLK"],
+
             ]
         },
     ]
