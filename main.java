@@ -16,31 +16,32 @@ public class Main {
         }
     }
 
-    static Map<Integer, List<Integer>> gridNeighbors(List<Cell> cells, double d) {
+    static Map<Integer, List<Integer>> gridNeighbors(List<int[]> coords, double d) {
         Map<Pair<Integer, Integer>, List<Integer>> grid = new HashMap<>();
         double cellSize = d;
 
-        for (int i = 0; i < cells.size(); i++) {
-            Cell cell = cells.get(i);
-            int cellX = (int) (cell.x / cellSize);
-            int cellY = (int) (cell.y / cellSize);
-            grid.computeIfAbsent(new Pair<>(cellX, cellY), k -> new ArrayList<>()).add(i);
+        for (int i = 0; i < coords.size(); i++) {
+            int[] coord = coords.get(i);
+            int cellX = (int) (coord[0] / cellSize);
+            int cellY = (int) (coord[1] / cellSize);
+            Pair<Integer, Integer> cell = new Pair<>(cellX, cellY);
+            grid.computeIfAbsent(cell, k -> new ArrayList<>()).add(i);
         }
 
         Map<Integer, List<Integer>> neighbors = new HashMap<>();
 
-        for (int i = 0; i < cells.size(); i++) {
-            Cell cell = cells.get(i);
-            int cellX = (int) (cell.x / cellSize);
-            int cellY = (int) (cell.y / cellSize);
+        for (int i = 0; i < coords.size(); i++) {
+            int[] coord = coords.get(i);
+            int cellX = (int) (coord[0] / cellSize);
+            int cellY = (int) (coord[1] / cellSize);
 
             for (int dx = -1; dx <= 1; dx++) {
                 for (int dy = -1; dy <= 1; dy++) {
                     Pair<Integer, Integer> neighborCell = new Pair<>(cellX + dx, cellY + dy);
                     for (int j : grid.getOrDefault(neighborCell, Collections.emptyList())) {
                         if (i != j) {
-                            double dist = Math.sqrt(Math.pow(cells.get(i).x - cells.get(j).x, 2)
-                                    + Math.pow(cells.get(i).y - cells.get(j).y, 2));
+                            double dist = Math.sqrt(Math.pow(coords.get(i)[0] - coords.get(j)[0], 2) +
+                                    Math.pow(coords.get(i)[1] - coords.get(j)[1], 2));
                             if (dist <= d) {
                                 neighbors.computeIfAbsent(i, k -> new ArrayList<>()).add(j);
                             }
@@ -57,7 +58,11 @@ public class Main {
         Map<Integer, List<Integer>> graph = new HashMap<>();
         int n = cells.size();
 
-        Map<Integer, List<Integer>> neighbors = gridNeighbors(cells, d);
+        List<int[]> coords = new ArrayList<>();
+        for (Cell cell : cells) {
+            coords.add(new int[] { cell.x, cell.y });
+        }
+        Map<Integer, List<Integer>> neighbors = gridNeighbors(coords, d);
 
         for (int i = 0; i < n; i++) {
             Cell cell1 = cells.get(i);
@@ -73,59 +78,52 @@ public class Main {
         return graph;
     }
 
-    static List<Set<Integer>> findApproximateCliques(Map<Integer, Set<Integer>> adjList, int n) {
-        List<Set<Integer>> cliques = new ArrayList<>();
-        boolean[] visited = new boolean[n + 1];
+    static Map<Integer, Integer> cliqueApproximation(Map<Integer, List<Integer>> graph) {
+        Set<Integer> processedNodes = new HashSet<>();
+        List<Set<Integer>> groups = new ArrayList<>();
+        Map<Integer, Set<Integer>> adjacencyList = new HashMap<>();
 
-        for (int node = 1; node <= n; node++) {
-            if (!visited[node]) {
-                Set<Integer> clique = new HashSet<>();
-                clique.add(node);
-                visited[node] = true;
+        for (Map.Entry<Integer, List<Integer>> entry : graph.entrySet()) {
+            adjacencyList.put(entry.getKey(), new HashSet<>(entry.getValue()));
+        }
 
-                for (int neighbor : adjList.getOrDefault(node, Collections.emptySet())) {
-                    if (!visited[neighbor]) {
-                        boolean canJoin = true;
-                        for (int member : clique) {
-                            if (!adjList.getOrDefault(member, Collections.emptySet()).contains(neighbor)) {
-                                canJoin = false;
-                                break;
-                            }
-                        }
-                        if (canJoin) {
-                            clique.add(neighbor);
-                            visited[neighbor] = true;
+        for (int currentNode : adjacencyList.keySet()) {
+            if (!processedNodes.contains(currentNode)) {
+                Set<Integer> group = new HashSet<>();
+                group.add(currentNode);
+                processedNodes.add(currentNode);
+
+                List<Integer> potentialMembers = new ArrayList<>(adjacencyList.get(currentNode));
+                potentialMembers.sort((a, b) -> Integer.compare(
+                        Sets.intersection(adjacencyList.get(b), group).size(),
+                        Sets.intersection(adjacencyList.get(a), group).size()));
+
+                for (int neighbor : potentialMembers) {
+                    if (!processedNodes.contains(neighbor)) {
+                        if (adjacencyList.get(neighbor).containsAll(group)) {
+                            group.add(neighbor);
+                            processedNodes.add(neighbor);
                         }
                     }
                 }
-                cliques.add(clique);
+
+                groups.add(group);
             }
         }
 
-        return cliques;
-    }
-
-    static Map<Integer, Integer> componentesClique(Map<Integer, List<Integer>> graph) {
-        List<Integer> ids = new ArrayList<>(graph.keySet());
-        Map<Integer, Set<Integer>> adjList = new HashMap<>();
-        for (Map.Entry<Integer, List<Integer>> entry : graph.entrySet()) {
-            adjList.put(entry.getKey(), new HashSet<>(entry.getValue()));
-        }
-        List<Set<Integer>> cliques = findApproximateCliques(adjList, ids.size());
-
-        Map<Integer, Integer> cliqueAssignment = new HashMap<>();
-        for (int i = 0; i < cliques.size(); i++) {
-            for (int node : cliques.get(i)) {
-                cliqueAssignment.put(node, i + 1);
+        Map<Integer, Integer> result = new HashMap<>();
+        for (int i = 0; i < groups.size(); i++) {
+            for (int node : groups.get(i)) {
+                result.put(node, i + 1);
             }
         }
 
-        return cliqueAssignment;
+        return result;
     }
 
     static Map<Integer, Integer> resolverCaso(int n, double d, List<Cell> cells) {
         Map<Integer, List<Integer>> graph = construirGrafo(cells, d);
-        return componentesClique(graph);
+        return cliqueApproximation(graph);
     }
 
     public static void main(String[] args) throws IOException {
@@ -141,24 +139,23 @@ public class Main {
 
             for (int j = 0; j < n; j++) {
                 line = br.readLine().trim().split(" ");
-                int idCelula = Integer.parseInt(line[0]);
+                int id = Integer.parseInt(line[0]);
                 int x = Integer.parseInt(line[1]);
                 int y = Integer.parseInt(line[2]);
                 Set<String> peptides = new HashSet<>(Arrays.asList(Arrays.copyOfRange(line, 3, line.length)));
-                cells.add(new Cell(idCelula, x, y, peptides));
+                cells.add(new Cell(id, x, y, peptides));
             }
 
             Map<Integer, Integer> resultado = resolverCaso(n, d, cells);
 
-            for (int idCelula : new TreeSet<>(resultado.keySet())) {
-                results.add(idCelula + " " + resultado.get(idCelula));
+            for (int cellId : new TreeSet<>(resultado.keySet())) {
+                results.add(cellId + " " + resultado.get(cellId));
             }
         }
 
-        BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(System.out));
-        bw.write(String.join("\n", results));
-        bw.newLine();
-        bw.flush();
+        for (String result : results) {
+            System.out.println(result);
+        }
     }
 
     static class Pair<K, V> {
@@ -183,6 +180,14 @@ public class Main {
         @Override
         public int hashCode() {
             return Objects.hash(first, second);
+        }
+    }
+
+    static class Sets {
+        static <T> Set<T> intersection(Set<T> set1, Set<T> set2) {
+            Set<T> result = new HashSet<>(set1);
+            result.retainAll(set2);
+            return result;
         }
     }
 }
