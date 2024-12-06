@@ -48,29 +48,23 @@ def clique_aproximation(grafo):
     groups = []
     adjacency_list = {node: set(neighbors) for node, neighbors in grafo.items()}
 
+
     for current_node in adjacency_list:
         if current_node not in processed_nodes:
             group = {current_node}
             processed_nodes.add(current_node)
 
-            # Lista de vecinos ordenados por el número de conexiones con el grupo
-            potential_members = sorted(
-                adjacency_list[current_node], 
-                key=lambda neighbor: len(adjacency_list[neighbor].intersection(group)), 
-                reverse=True
-            )
-            
-            # Expandir el grupo de manera codiciosa
+            potential_members = [
+                neighbor for neighbor in adjacency_list[current_node] if neighbor not in processed_nodes
+            ]
+
             for neighbor in potential_members:
-                if neighbor not in processed_nodes:
-                    # Verificar si el vecino se conecta con todos los miembros del grupo
-                    if group.issubset(adjacency_list[neighbor]):
-                        group.add(neighbor)
-                        processed_nodes.add(neighbor)
+                if all(neighbor in adjacency_list[member] for member in group):
+                    group.add(neighbor)
+                    processed_nodes.add(neighbor)
 
             groups.append(group)
 
-    # Asignar un grupo único a cada nodo
     return {
         node: group_index + 1
         for group_index, group in enumerate(groups)

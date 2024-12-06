@@ -48,25 +48,23 @@ def clique_aproximation(grafo):
     groups = []
     adjacency_list = {node: set(neighbors) for node, neighbors in grafo.items()}
 
-    for current_node in adjacency_list:
+    # Ordenar los nodos por el número de vecinos (grados)
+    sorted_nodes = sorted(adjacency_list, key=lambda x: len(adjacency_list[x]), reverse=True)
+
+    for current_node in sorted_nodes:
         if current_node not in processed_nodes:
             group = {current_node}
             processed_nodes.add(current_node)
 
-            # Lista de vecinos ordenados por el número de conexiones con el grupo
-            potential_members = sorted(
-                adjacency_list[current_node], 
-                key=lambda neighbor: len(adjacency_list[neighbor].intersection(group)), 
-                reverse=True
-            )
+            potential_members = [
+                neighbor for neighbor in adjacency_list[current_node] if neighbor not in processed_nodes
+            ]
             
-            # Expandir el grupo de manera codiciosa
+            # Usamos un conjunto para verificar rápidamente si el vecino está en todos los miembros del grupo
             for neighbor in potential_members:
-                if neighbor not in processed_nodes:
-                    # Verificar si el vecino se conecta con todos los miembros del grupo
-                    if group.issubset(adjacency_list[neighbor]):
-                        group.add(neighbor)
-                        processed_nodes.add(neighbor)
+                if group.issubset(adjacency_list[neighbor]):
+                    group.add(neighbor)
+                    processed_nodes.add(neighbor)
 
             groups.append(group)
 
@@ -76,6 +74,7 @@ def clique_aproximation(grafo):
         for group_index, group in enumerate(groups)
         for node in group
     }
+
 
 
 def resolver_caso(n, d, celulas):

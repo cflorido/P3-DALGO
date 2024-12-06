@@ -48,27 +48,29 @@ def clique_aproximation(grafo):
     groups = []
     adjacency_list = {node: set(neighbors) for node, neighbors in grafo.items()}
 
-    for current_node in adjacency_list:
+    # Ordenar los nodos por el grado (número de vecinos) de manera descendente
+    sorted_nodes = sorted(adjacency_list, key=lambda x: len(adjacency_list[x]), reverse=True)
+
+    def expand_clique(group):
+        """ Expande el clique agregando nodos que sean adyacentes a todos los miembros del clique """
+        potential_members = set(adjacency_list[group[-1]])  # Comienza con los vecinos del último miembro
+        for node in group:
+            potential_members &= adjacency_list[node]  # Solo vecinos comunes
+
+        # Solo agregamos nodos que son adyacentes a todos los miembros del clique
+        return group + [node for node in potential_members if node not in group]
+
+    for current_node in sorted_nodes:
         if current_node not in processed_nodes:
-            group = {current_node}
+            group = [current_node]
             processed_nodes.add(current_node)
 
-            # Lista de vecinos ordenados por el número de conexiones con el grupo
-            potential_members = sorted(
-                adjacency_list[current_node], 
-                key=lambda neighbor: len(adjacency_list[neighbor].intersection(group)), 
-                reverse=True
-            )
-            
-            # Expandir el grupo de manera codiciosa
-            for neighbor in potential_members:
-                if neighbor not in processed_nodes:
-                    # Verificar si el vecino se conecta con todos los miembros del grupo
-                    if group.issubset(adjacency_list[neighbor]):
-                        group.add(neighbor)
-                        processed_nodes.add(neighbor)
+            # Expandimos el clique mientras se pueda
+            expanded_group = expand_clique(group)
+            groups.append(expanded_group)
 
-            groups.append(group)
+            # Marcamos todos los miembros del grupo como procesados
+            processed_nodes.update(expanded_group)
 
     # Asignar un grupo único a cada nodo
     return {
@@ -76,6 +78,7 @@ def clique_aproximation(grafo):
         for group_index, group in enumerate(groups)
         for node in group
     }
+
 
 
 def resolver_caso(n, d, celulas):
